@@ -136,40 +136,61 @@ doOne <- function(npis, r0, period) {
 }
 ```
 
-Consider an epidemic with $R_0 = 2.5$ per 7-days.
+Consider an epidemic with growth rate of 2.5 per 7-days.
 Apply two NPIs
-which cut the 7-day growth rate by 50%,
+each of which cut the 7-day growth rate by 50%,
 one running from days 11-30
 and the other from days 21-30.
+The final 10 days have both NPIs in place for a cut of 75%.
+
+Using daily cases,
+linear regression assigns the expected coefficients
+from which we can recover the 7-day growth rate.
+
+Using cumulative cases,
+linear regression assigns a much lower coefficient
+to the first NPI.
 
 ```{r}
-npis <- c(NPI(11, 30, 2.5*0.5), NPI(21, 30, 2.5*0.5))
+npis <- c(NPI(11, 30, 0.5), NPI(21, 30, 0.5))
 cs = doOne(npis, 2.5, 7)
 ```
 
-Now consider an identical epidemic
-but where the NPIs are non-overlapping
-(the second NPI has cuts growth by 75%).
-The reason to do this
-is to see the impact this has on the outcome of the regression.
-
+Now consider an epidemic
+that runs an identical course
+but where we apply 2 non-overlapping NPIs,
+the first of which cuts growth by 50%
+and the second by 75%.
+Doing it this way gives the same result
+when using daily cases
+but gives a different result with cumulative.
+This is because the regression is now piecewse
+on the 10-day periods
+and the overestimation of NPI1
+does not cause underestimation on NPI2.
 
 ```{r}
 npis <- c(NPI(11, 20, 0.5), NPI(21, 30, 0.5^2))
 cs = doOne(npis, 2.5, 7)
 ```
 
-Another epidemic where the later NPI is far stronger (80% vs 20%)
-but still appear weaker from the regression
+Another epidemic where the first NPI
+reduces growth by 1%
+and the second NPI reduces it by 99%
+but still appears weaker in the cumulative regression
 
 ```{r}
-npis <- c(NPI(11, 30, 1/2.4), NPI(21, 30, .99))
+npis <- c(NPI(11, 30, .99), NPI(21, 30, .01))
 cs = doOne(npis, 2.5, 7)
 ```
 
-Finally in this epidemic we do not get it under control.
+Finally the absurdity,
+where the first NPI
+increases growth by 5%
+and the second NPI stops growth entirely
+but still appears weaker from the regression!
 
 ```{r}
-npis <- c(NPI(11, 30, .8), NPI(21, 30, .8))
+npis <- c(NPI(11, 30, 1.05), NPI(21, 30, 0))
 cs = doOne(npis, 2.5, 7)
 ```
