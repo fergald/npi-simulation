@@ -114,14 +114,14 @@ doOne <- function(npis, r0, period) {
   daily = createCases(rates)
   cumulative = cumsum(daily)
   
-  plot(cases)
-  plot(cumulative)
+  plot(cases, ylab="daily cases")
+  plot(cumulative, ylab="cumulative cases")
   
   d_l_daily <- diff(log(daily))
   d_l_cumulative <- diff(log(cumulative))
   
-  plot(d_l_daily)
-  plot(d_l_cumulative)
+  plot(d_l_daily,ylab="delta(log(daily cases))")
+  plot(d_l_cumulative, ylab="delta(log(cumulative cases))")
   
   regressAndRender(npis, daily, period)
   regressAndRender(npis, cumulative, period)
