@@ -4,6 +4,7 @@ output: html_notebook
 ---
 
 ```{r}
+library(knitr)
 # This class represents and Non-pharmacological intervention.
 # The NPI is in place from day |start| to day |end| inclusive.
 setClass("npi",
@@ -92,20 +93,17 @@ regress <- function(npis, cases) {
 }
 
 # Dump out some info on the coefficients.
-renderRates <- function(c, period) {
-  print("coefficients")
-  print(c)
-  cat("coefficients as rates per ", period, " days\n")
-  print(exp(c * period))
-  print("npi2 - npi1")
-  diff = c[["npi2"]] - c[["npi1"]]
-  print(diff)
-  print(exp(diff))
+renderRates <- function(c, period, title) {
+  print(kable(c, caption=paste("Coefficients using ", title) ))
+  rate_c = exp(c * period)
+  print(kable(rate_c, caption=paste("Recovered multiplicative rate per ", period, " days using ", title)))
 }
 
-regressAndRender <- function(npis, cases, period) {
+# Applying regression and print the results and comparisons.
+regressAndRender <- function(npis, cases, period, title) {
   c <- regress(npis, cases)
-  renderRates(c, period)
+  renderRates(c, period, title)
+  c
 }
 
 # Apply the methodology to |npis| with a base growth rate of |r0|.
@@ -116,7 +114,7 @@ doOne <- function(npis, r0, period) {
   daily = createCases(rates)
   cumulative = cumsum(daily)
   
-  plot(cases, ylab="daily cases")
+  plot(daily, ylab="daily cases")
   plot(cumulative, ylab="cumulative cases")
   
   d_l_daily <- diff(log(daily))
@@ -124,16 +122,17 @@ doOne <- function(npis, r0, period) {
   
   plot(d_l_daily,ylab="delta(log(daily cases))")
   plot(d_l_cumulative, ylab="delta(log(cumulative cases))")
-  
-  regressAndRender(npis, daily, period)
-  regressAndRender(npis, cumulative, period)
+
+  c1 = regressAndRender(npis, daily, period, "daily")
+  c2 = regressAndRender(npis, cumulative, period, "cumulative")
+  list("c1"=c1, "c2"=c2)
 }
 
-npis <- c(NPI(11, 30, 0.6), NPI(21, 30, 0.6))
-doOne(npis, 2.5, 7)
+npis <- c(NPI(10, 30, 0.5), NPI(21, 30, 0.5))
+cs = doOne(npis, 2.5, 7)
 ```
 
 ```{r}
-npis <- c(NPI(11, 30, .8), NPI(21, 30, .4))
-doOne(npis, 2.5, 7)
+npis <- c(NPI(11, 30, .8), NPI(21, 30, .2))
+cs = doOne(npis, 2.5, 7)
 ```
