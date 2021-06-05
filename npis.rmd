@@ -32,33 +32,15 @@ npis_end <- function(npis) {
   }))
 }
 
-r_period <- 7
-scale <- function(rate) {
-  exp(log(rate) / r_period)
-}
-
-createGrowthRates <- function(base_rate, npis) {
+# A vector of 0/1 for each day simulated. A day gets a 1 if the NPI is active on that day, 0 otherwise.
+# Used as a predictor in the linear regression.
+npi_pred <- function(npis, i) {
   last <- npis_end(npis)
-  rates <- numeric()
-  for (i in 1:last) {
-    rate <- base_rate
-    for (npi in npis) {
-      if (in_npi(npi, i)) {
-        rate <- rate * scale(npi@factor)
-      }
-    }
-    rates <- append(rates, rate)
-  }
-  rates
-}
-
-createPredictor <- function(npi) {
-  last <- npis_end(npis)
+  npi = npis[[i]]
   pred <- numeric()
-  npi_i = 0
   value = 0
-  for (i in 1:last) {
-    pred <- append(pred, (if (in_npi(npi, i))
+  for (d in 1:last) {
+    pred <- append(pred, (if (in_npi(npi, d))
       1
       else
         0))
@@ -66,6 +48,29 @@ createPredictor <- function(npi) {
   pred
 }
 
+# Scales a growth rate so that it becomes |rate| every |period| days.
+scale <- function(rate, period) {
+  exp(log(rate) / period)
+}
+
+# Returns a vector of growth rates by combining |npis| with a base growth rate.
+# All growth is scaled over |period| days.
+createGrowthRates <- function(base_rate, npis, period) {
+  last <- npis_end(npis)
+  rates <- numeric()
+  for (i in 1:last) {
+    rate <- scale(base_rate, period)
+    for (npi in npis) {
+      if (in_npi(npi, i)) {
+        rate <- rate * scale(npi@factor, period)
+      }
+    }
+    rates <- append(rates, rate)
+  }
+  rates
+}
+
+# Create a timeseries of cases based on the supplied vector of daily growth rates.
 createCases <- function(rates) {
   cases <- c(1)
   for (rate in rates) {
@@ -74,37 +79,58 @@ createCases <- function(rates) {
   cases
 }
 
-npis <- c(NPI(11, 30, .9), NPI(21, 30, .7))
-rates <- createGrowthRates(1.5, npis)
-
-daily = createCases(rates)
-cumulative = cumsum(daily)
-
-plot(cases)
-plot(cumulative)
-
-d_l_daily <- diff(log(daily))
-d_l_cumulative <- diff(log(cumulative))
-
-plot(d_l_daily)
-plot(d_l_cumulative)
-
+# Returns the coefficients for the impact of |npis| by applying linear regression to diff(log(|cases|)).
 regress <- function(npis, cases) {
   d_l = diff(log(cases))
-  npi1 <- createPredictor(npis[[1]])
-  npi2 <- createPredictor(npis[[2]])
+  npi1 <- npi_pred(npis, 1)
+  npi2 <- npi_pred(npis, 2)
   d = data.frame(y = d_l,
-                        npi1 = npi1,
-                        npi2 = npi2)
+                 npi1 = npi1,
+                 npi2 = npi2)
   r.model <- lm(y ~ npi1 + npi2, data = d)
-  c <- r.model$coefficients
-  print("coefficients")
-  print(c)
-  print("coefficients as rates")
-  print(exp(c*r_period))
+  r.model$coefficients
 }
 
-regress(npis, daily)
-regress(npis, cumulative)
+# Dump out some info on the coefficients.
+renderRates <- function(c, period) {
+  print("coefficients")
+  print(c)
+  cat("coefficients as rates per ", period, " days\n")
+  print(exp(c * period))
+  print("npi2 - npi1")
+  print(c["npi2"] - c["npi1"])
+}
+
+regressAndRender <- function(npis, cases, period) {
+  c <- regress(npis, cases)
+  renderRates(c, period)
+}
+
+# Apply the methodology to |npis| with a base growth rate of |r0|.
+# Scale all rates to be per |period|
+doOne <- function(npis, r0, period) {
+  rates <- createGrowthRates(1.5, npis, period)
+  
+  daily = createCases(rates)
+  cumulative = cumsum(daily)
+  
+  plot(cases)
+  plot(cumulative)
+  
+  d_l_daily <- diff(log(daily))
+  d_l_cumulative <- diff(log(cumulative))
+  
+  plot(d_l_daily)
+  plot(d_l_cumulative)
+  
+  regressAndRender(npis, daily, period)
+  regressAndRender(npis, cumulative, period)
+}
+
+npis <- c(NPI(11, 20, 1.5 / 2.5), NPI(21, 50, .9 / 2.5))
+doOne(npis, 2.5, 7)
+
+npis <- c(NPI(11, 20, .5), NPI(21, 30, .5 ^ 2))
+doOne(npis, 2.5, 7)
 
 ```
