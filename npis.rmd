@@ -94,9 +94,10 @@ regress <- function(npis, cases) {
 
 # Dump out some info on the coefficients.
 renderRates <- function(c, period, title) {
-  print(kable(c, caption=paste("Coefficients using ", title) ))
   rate_c = exp(c * period)
-  print(kable(rate_c, caption=paste("Recovered multiplicative rate per ", period, " days using ", title)))
+  d = data.frame(c, rate_c)
+  print(kable(d, col.names=c("log(r)", paste("r ", period, " days")),
+              caption=paste("Regression using ", title), valign='t'))
 }
 
 # Applying regression and print the results and comparisons.
