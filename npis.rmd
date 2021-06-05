@@ -159,7 +159,7 @@ npis <- c(NPI(11, 30, .8), NPI(21, 30, .2))
 cs = doOne(npis, 2.5, 7)
 ```
 
-Finally in this empidemic we do not get it under control.
+Finally in this epidemic we do not get it under control.
 
 ```{r}
 npis <- c(NPI(11, 30, .8), NPI(21, 30, .8))
