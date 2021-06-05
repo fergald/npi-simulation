@@ -136,6 +136,8 @@ doOne <- function(npis, r0, period) {
 }
 ```
 
+# Two equally effective NPIs
+
 Consider an epidemic with growth rate of 2.5 per 7-days.
 Apply two NPIs
 each of which cut the 7-day growth rate by 50%,
@@ -156,6 +158,8 @@ npis <- c(NPI(11, 30, 0.5), NPI(21, 30, 0.5))
 cs = doOne(npis, 2.5, 7)
 ```
 
+# The same epidemic but changing the regression
+
 Now consider an epidemic
 that runs an identical course
 but where we apply 2 non-overlapping NPIs,
@@ -173,6 +177,7 @@ does not cause underestimation on NPI2.
 npis <- c(NPI(11, 20, 0.5), NPI(21, 30, 0.5^2))
 cs = doOne(npis, 2.5, 7)
 ```
+# Two very unequal NPIs but the same outcome
 
 Another epidemic where the first NPI
 reduces growth by 1%
@@ -183,6 +188,7 @@ but still appears weaker in the cumulative regression
 npis <- c(NPI(11, 30, .99), NPI(21, 30, .01))
 cs = doOne(npis, 2.5, 7)
 ```
+# An NPI that makes things worse beats the NPI that ends the epidemic!
 
 Finally the absurdity,
 where the first NPI
