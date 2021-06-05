@@ -3,6 +3,33 @@ title: "Problems with delta(log(cumulative))"
 output: html_notebook
 ---
 
+This is a follow-up again to my previous posts.
+I have since discovered that effects
+come in from the linear regression
+that make the use of cumulative cases
+even less valid.
+
+Again, I am playing with simulated epidemics
+of 10 days free growth,
+followed by 10 days with $NPI_1$
+then 10 days with $NPI_1$ and $NPI_2$
+What is key is that $NPI_1$ lasts from day 11 to day 30
+and $NPI_2$ lasts from day 21 to day 30.
+This is exactly what was done in the original paper.
+The result is that
+the regression over-weights the $NPI_1$
+and so has to under-weight $NPI_2$.
+
+I could try to explain it in intuitive terms
+but I'm not sure that I'm right.
+Fundamentally it's a result of apply linear regression
+to something that is just not linear.
+
+Here are some examples of this going badly wrong.
+The highlight is where the NPI that causes growth to increase
+comes out better than
+the NPI that drops growth to 0!
+
 ```{r}
 library(knitr)
 # This class represents and Non-pharmacological intervention.
@@ -140,7 +167,7 @@ doOne <- function(npis, r0, period) {
 # Two equally effective NPIs
 
 Consider an epidemic with growth rate of 2.5 per 7-days.
-Apply two NPIs
+Apply two NPIs,
 each of which cut the 7-day growth rate by 50%,
 one running from days 11-30
 and the other from days 21-30.
