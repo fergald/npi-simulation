@@ -4,12 +4,15 @@ output: html_notebook
 ---
 
 ```{r}
+# This class represents and Non-pharmacological intervention.
+# The NPI is in place from day |start| to day |end| inclusive.
 setClass("npi",
          slots = list(
            start = "numeric",
            end = "numeric",
            factor = "numeric"
          ))
+# Convenient constructor for NPIs.
 NPI <-
   function(start, end, factor)
     new("npi",
@@ -17,10 +20,12 @@ NPI <-
         end = end,
         factor = factor)
 
+# Returns true if a day is impacted by |npi|
 in_npi <- function(npi, i) {
   i >= npi@start && i <= npi@end
 }
 
+# Returns the last day impacted by any NPI in |npis|
 npis_end <- function(npis) {
   max(sapply(npis, function(x) {
     x@end
