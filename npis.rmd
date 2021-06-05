@@ -107,7 +107,9 @@ regressAndRender <- function(npis, cases, period, title) {
 }
 
 # Apply the methodology to |npis| with a base growth rate of |r0|.
-# Scale all rates to be per |period|
+# Scale all rates to be per |period|.
+# Returns a list of coefficient sets from the regressions it ran.
+# It will skip daily-case regression if any NPI has a factor of 0.
 doOne <- function(npis, r0, period) {
   rates <- createGrowthRates(r0, npis, period)
   daily = createCases(rates)
@@ -122,9 +124,15 @@ doOne <- function(npis, r0, period) {
   plot(d_l_daily,ylab="delta(log(daily cases))")
   plot(d_l_cumulative, ylab="delta(log(cumulative cases))")
 
-  c1 = regressAndRender(npis, daily, period, "daily")
+  cs = list()
+  if (min(sapply(npis, function(npi) {npi@factor})) > 0) {
+    c1 = regressAndRender(npis, daily, period, "daily")
+    cs = append(cs, c1)
+  } else {
+    print("Skipping daily due to 0-factor")
+  }
   c2 = regressAndRender(npis, cumulative, period, "cumulative")
-  list("c1"=c1, "c2"=c2)
+  cs = append(cs, c2)
 }
 ```
 
