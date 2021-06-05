@@ -112,13 +112,13 @@ doOne <- function(npis, r0, period) {
   rates <- createGrowthRates(r0, npis, period)
   daily = createCases(rates)
   cumulative = cumsum(daily)
-  
+
   plot(daily, ylab="daily cases")
   plot(cumulative, ylab="cumulative cases")
-  
+
   d_l_daily <- diff(log(daily))
   d_l_cumulative <- diff(log(cumulative))
-  
+
   plot(d_l_daily,ylab="delta(log(daily cases))")
   plot(d_l_cumulative, ylab="delta(log(cumulative cases))")
 
@@ -126,12 +126,42 @@ doOne <- function(npis, r0, period) {
   c2 = regressAndRender(npis, cumulative, period, "cumulative")
   list("c1"=c1, "c2"=c2)
 }
+```
 
-npis <- c(NPI(11, 30, 0.5), NPI(21, 30, 0.5))
+Consider an epidemic with $R_0 = 2.5$ per 7-days.
+Apply two NPIs
+which cut the 7-day growth rate by 50%,
+one running from days 11-30
+and the other from days 21-30.
+
+```{r}
+npis <- c(NPI(11, 30, 2.5*0.5), NPI(21, 30, 2.5*0.5))
 cs = doOne(npis, 2.5, 7)
 ```
 
+Now consider an identical epidemic
+but where the NPIs are non-overlapping
+(the second NPI has cuts growth by 75%).
+The reason to do this
+is to see the impact this has on the outcome of the regression.
+
+
+```{r}
+npis <- c(NPI(11, 20, 0.5), NPI(21, 30, 0.5^2))
+cs = doOne(npis, 2.5, 7)
+```
+
+Another epidemic where the later NPI is far stronger (80% vs 20%)
+but still appear weaker from the regression
+
 ```{r}
 npis <- c(NPI(11, 30, .8), NPI(21, 30, .2))
+cs = doOne(npis, 2.5, 7)
+```
+
+Finally in this empidemic we do not get it under control.
+
+```{r}
+npis <- c(NPI(11, 30, .8), NPI(21, 30, .8))
 cs = doOne(npis, 2.5, 7)
 ```
