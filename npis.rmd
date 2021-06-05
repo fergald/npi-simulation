@@ -1,0 +1,83 @@
+---
+title: "Problems with delta(log(cumulative))"
+output: html_notebook
+---
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Ctrl+Shift+Enter*. 
+
+```{r}
+setClass("npi", slots = list(duration = "numeric", factor = "numeric"))
+NPI <-
+  function(duration, factor)
+    new("npi", duration = duration, factor = factor)
+
+r_period <- 7
+scale <- function(rate) {
+  exp(log(rate)/r_period)
+}
+npis<-c(NPI(10, 1), NPI(20, .8), NPI(10, .8))
+
+createGrowthRates <- function(rate, npis) {
+  rates <- numeric()
+  for (npi in npis) {
+    rate <- scale(rate * npi@factor)
+    for (i in 1:npi@duration) {
+      rates <- append(rates, rate)
+    }
+  }
+  rates
+}
+
+createPredictor <- function(npis, i) {
+  pred = numeric()
+  npi_i = 0
+  value = 0
+  for (npi in npis) {
+    npi_i <- npi_i + 1
+    value <- if(value == 1 || i == npi_i) 1 else 0
+    pred <- append(pred, rep(value, npi@duration))
+  }
+  pred
+}
+
+
+rates <- createGrowthRates(1.5, npis)
+
+createCases <- function(rates) {
+  cases <- c(1)
+  for (rate in rates) {
+    cases <- append(cases, tail(cases, 1) * rate)
+  }
+  cases
+}
+daily = createCases(rates)
+cumulative = cumsum(daily)
+
+plot(cases)
+plot(cumulative)
+
+d_l_daily <- diff(log(daily))
+d_l_cumulative <- diff(log(cumulative))
+
+plot(d_l_daily)
+plot(d_l_cumulative)
+
+npi2 <- createPredictor(npis, 2)
+npi3 <- createPredictor(npis, 3)
+daily_data = data.frame(y = d_l_daily,
+               npi2 = npi2,
+               npi3 = npi3)
+daily.model <- lm(y ~ npi2 + npi3, data=daily_data)
+
+cumulative_data = data.frame(y = d_l_cumulative,
+               npi2 = npi2,
+               npi3 = npi3)
+cumulative.model <- lm(y ~ npi2 + npi3, data=cumulative_data)
+
+daily.model$coefficients
+cumulative.model$coefficients
+
+
+```
