@@ -98,7 +98,9 @@ renderRates <- function(c, period) {
   cat("coefficients as rates per ", period, " days\n")
   print(exp(c * period))
   print("npi2 - npi1")
-  print(c["npi2"] - c["npi1"])
+  diff = c[["npi2"]] - c[["npi1"]]
+  print(diff)
+  print(exp(diff))
 }
 
 regressAndRender <- function(npis, cases, period) {
