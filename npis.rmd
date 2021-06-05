@@ -157,26 +157,6 @@ to the first NPI.
 npis <- c(NPI(11, 30, 0.5), NPI(21, 30, 0.5))
 cs = doOne(npis, 2.5, 7)
 ```
-
-# The same epidemic but changing the regression
-
-Now consider an epidemic
-that runs an identical course
-but where we apply 2 non-overlapping NPIs,
-the first of which cuts growth by 50%
-and the second by 75%.
-Doing it this way gives the same result
-when using daily cases
-but gives a different result with cumulative.
-This is because the regression is now piecewse
-on the 10-day periods
-and the overestimation of NPI1
-does not cause underestimation on NPI2.
-
-```{r}
-npis <- c(NPI(11, 20, 0.5), NPI(21, 30, 0.5^2))
-cs = doOne(npis, 2.5, 7)
-```
 # Two very unequal NPIs but the same outcome
 
 Another epidemic where the first NPI
