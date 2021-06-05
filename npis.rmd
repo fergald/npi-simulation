@@ -3,47 +3,63 @@ title: "Problems with delta(log(cumulative))"
 output: html_notebook
 ---
 
-This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
-
-Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Ctrl+Shift+Enter*. 
-
 ```{r}
-setClass("npi", slots = list(duration = "numeric", factor = "numeric"))
+setClass("npi",
+         slots = list(
+           start = "numeric",
+           end = "numeric",
+           factor = "numeric"
+         ))
 NPI <-
-  function(duration, factor)
-    new("npi", duration = duration, factor = factor)
+  function(start, end, factor)
+    new("npi",
+        start = start,
+        end = end,
+        factor = factor)
+
+in_npi <- function(npi, i) {
+  i >= npi@start && i <= npi@end
+}
+
+npis_end <- function(npis) {
+  max(sapply(npis, function(x) {
+    x@end
+  }))
+}
 
 r_period <- 7
 scale <- function(rate) {
-  exp(log(rate)/r_period)
+  exp(log(rate) / r_period)
 }
-npis<-c(NPI(10, 1), NPI(20, .8), NPI(10, .8))
 
-createGrowthRates <- function(rate, npis) {
+createGrowthRates <- function(base_rate, npis) {
+  last <- npis_end(npis)
   rates <- numeric()
-  for (npi in npis) {
-    rate <- scale(rate * npi@factor)
-    for (i in 1:npi@duration) {
-      rates <- append(rates, rate)
+  for (i in 1:last) {
+    rate <- base_rate
+    for (npi in npis) {
+      if (in_npi(npi, i)) {
+        rate <- rate * scale(npi@factor)
+      }
     }
+    rates <- append(rates, rate)
   }
   rates
 }
 
-createPredictor <- function(npis, i) {
-  pred = numeric()
+createPredictor <- function(npi) {
+  last <- npis_end(npis)
+  pred <- numeric()
   npi_i = 0
   value = 0
-  for (npi in npis) {
-    npi_i <- npi_i + 1
-    value <- if(value == 1 || i == npi_i) 1 else 0
-    pred <- append(pred, rep(value, npi@duration))
+  for (i in 1:last) {
+    pred <- append(pred, (if (in_npi(npi, i))
+      1
+      else
+        0))
   }
   pred
 }
-
-
-rates <- createGrowthRates(1.5, npis)
 
 createCases <- function(rates) {
   cases <- c(1)
@@ -52,6 +68,10 @@ createCases <- function(rates) {
   }
   cases
 }
+
+npis <- c(NPI(11, 30, .9), NPI(21, 30, .7))
+rates <- createGrowthRates(1.5, npis)
+
 daily = createCases(rates)
 cumulative = cumsum(daily)
 
@@ -64,20 +84,22 @@ d_l_cumulative <- diff(log(cumulative))
 plot(d_l_daily)
 plot(d_l_cumulative)
 
-npi2 <- createPredictor(npis, 2)
-npi3 <- createPredictor(npis, 3)
-daily_data = data.frame(y = d_l_daily,
-               npi2 = npi2,
-               npi3 = npi3)
-daily.model <- lm(y ~ npi2 + npi3, data=daily_data)
+regress <- function(npis, cases) {
+  d_l = diff(log(cases))
+  npi1 <- createPredictor(npis[[1]])
+  npi2 <- createPredictor(npis[[2]])
+  d = data.frame(y = d_l,
+                        npi1 = npi1,
+                        npi2 = npi2)
+  r.model <- lm(y ~ npi1 + npi2, data = d)
+  c <- r.model$coefficients
+  print("coefficients")
+  print(c)
+  print("coefficients as rates")
+  print(exp(c*r_period))
+}
 
-cumulative_data = data.frame(y = d_l_cumulative,
-               npi2 = npi2,
-               npi3 = npi3)
-cumulative.model <- lm(y ~ npi2 + npi3, data=cumulative_data)
-
-daily.model$coefficients
-cumulative.model$coefficients
-
+regress(npis, daily)
+regress(npis, cumulative)
 
 ```
