@@ -127,10 +127,11 @@ doOne <- function(npis, r0, period) {
   regressAndRender(npis, cumulative, period)
 }
 
-npis <- c(NPI(11, 20, 1.5 / 2.5), NPI(21, 50, .9 / 2.5))
+npis <- c(NPI(11, 30, 0.6), NPI(21, 30, 0.6))
 doOne(npis, 2.5, 7)
+```
 
-npis <- c(NPI(11, 20, .5), NPI(21, 30, .5 ^ 2))
+```{r}
+npis <- c(NPI(11, 30, .8), NPI(21, 30, .4))
 doOne(npis, 2.5, 7)
-
 ```
