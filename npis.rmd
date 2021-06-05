@@ -56,17 +56,17 @@ scale <- function(rate, period) {
 
 # Returns a vector of growth rates by combining |npis| with a base growth rate.
 # All growth is scaled over |period| days.
-createGrowthRates <- function(base_rate, npis, period) {
+createGrowthRates <- function(r0, npis, period) {
   last <- npis_end(npis)
   rates <- numeric()
   for (i in 1:last) {
-    rate <- scale(base_rate, period)
+    rate <- r0
     for (npi in npis) {
       if (in_npi(npi, i)) {
-        rate <- rate * scale(npi@factor, period)
+        rate <- rate * npi@factor
       }
     }
-    rates <- append(rates, rate)
+    rates <- append(rates, scale(rate, period))
   }
   rates
 }
@@ -109,8 +109,7 @@ regressAndRender <- function(npis, cases, period, title) {
 # Apply the methodology to |npis| with a base growth rate of |r0|.
 # Scale all rates to be per |period|
 doOne <- function(npis, r0, period) {
-  rates <- createGrowthRates(1.5, npis, period)
-  
+  rates <- createGrowthRates(r0, npis, period)
   daily = createCases(rates)
   cumulative = cumsum(daily)
   
@@ -128,7 +127,7 @@ doOne <- function(npis, r0, period) {
   list("c1"=c1, "c2"=c2)
 }
 
-npis <- c(NPI(10, 30, 0.5), NPI(21, 30, 0.5))
+npis <- c(NPI(11, 30, 0.5), NPI(21, 30, 0.5))
 cs = doOne(npis, 2.5, 7)
 ```
 
